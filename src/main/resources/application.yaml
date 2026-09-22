@@ -1,0 +1,34 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: wit_living
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/wit_living?useSSL=false&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 10
+        min-idle: 1
+        time-between-eviction-runs: 10s
+rocketmq:
+  name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
+  producer:
+    group: wit_living-producer-group
+  jackson:
+    default-property-inclusion: non_null # JSON处理时忽略非空字段
+mybatis-plus:
+  type-aliases-package: com.witliving.entity # 别名扫描包
+logging:
+  level:
+    com.witliving: debug
+  pattern:
+    dateformat: mm:ss.SSS

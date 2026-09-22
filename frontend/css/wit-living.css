@@ -1,0 +1,53 @@
+/* Wit Living统一视觉层；原有 Vue 事件、API 和数据字段保持不变。 */
+:root { --accent:#ee704b; --ink:#2d3530; --muted:#85877c; --paper:#faf8f2; --line:#eee9df; }
+html { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; color:var(--ink); }
+body { background:#ebe9e2; }
+#app { position:relative; max-width:540px; margin:auto; background:var(--paper); box-shadow:0 0 60px #373b3012; }
+a { color:var(--accent); }
+.header { background:#fffdf8; border-bottom:1px solid var(--line); }
+.header-title { font-family:inherit; font-weight:700; letter-spacing:1px; }
+.search-bar { background:#fffdf8; color:var(--ink); min-height:50px; }
+.search-input .el-input__inner { background:#f1efe8; border:0; height:34px; }
+.city-btn { font-weight:700; }
+.header-icon { font-size:21px; color:var(--accent); cursor:pointer; }
+.zq-hero { position:relative; overflow:hidden; margin:0 14px 10px; padding:19px 22px; border-radius:20px; background:#294b3f; color:#fff9e7; }
+.zq-hero { background:linear-gradient(90deg,rgba(20,49,37,.96),rgba(20,49,37,.55)),url('/imgs/generated/courtyard.jpg') center/cover; }
+.zq-hero::after { content:'趣'; position:absolute; right:16px; top:-25px; font-size:118px; font-weight:900; color:#b9d4a433; transform:rotate(-12deg); pointer-events:none; }
+.zq-hero small { color:#c5d7b5; font-size:10px; letter-spacing:3px; }
+.zq-hero h1 { position:relative; z-index:1; font-size:26px; margin:7px 0; font-weight:700; letter-spacing:2px; }
+.zq-hero p { position:relative; z-index:1; margin:0; color:#d5dfcf; font-size:12px; line-height:1.8; }
+.zq-section { padding:0 18px; display:flex; align-items:center; justify-content:space-between; }
+.zq-section h2 { font-size:17px; margin:9px 0; }
+.zq-section span { font-size:11px; color:var(--muted); }
+.zq-home { display:flex; flex-direction:column; height:100dvh; }
+.zq-home .search-bar { flex:0 0 56px; height:auto; }
+.zq-home .zq-hero { flex-shrink:0; }
+.zq-home .type-list { flex:0 0 auto; height:auto; padding:8px 10px; box-shadow:none; background:var(--paper); }
+.type-box { cursor:pointer; }
+.type-box img { width:45px; height:45px; object-fit:contain; }
+.type-text { font-size:11px; margin:4px 0 12px; color:#60665b; }
+.zq-home .blog-list { flex:1; min-height:0; height:auto; align-content:flex-start; box-sizing:border-box; padding:4px 10px 16px; background:var(--paper); gap:10px; }
+.blog-box { width:calc(50% - 6px); border-radius:16px; overflow:hidden; box-shadow:0 3px 14px #2d353008; margin:0 0 4px; border:1px solid var(--line); box-sizing:border-box; }
+.blog-img img { border-radius:0; object-fit:cover; }
+.blog-title { box-sizing:border-box; width:100%; height:48px; padding:9px 11px 0; font-size:13px; font-weight:600; line-height:1.5; }
+.blog-foot { padding:3px 11px 10px; align-items:center; color:var(--muted); }
+.blog-user-icon img { border-radius:50%; }
+.foot { background:#fffdf8; border-top:1px solid var(--line); box-shadow:none; min-height:60px; z-index:10; }
+.zq-home .foot { position:relative; flex:0 0 64px; height:auto; }
+.foot-view { font-size:23px; }
+.foot-text { font-size:10px; margin-top:2px; }
+.foot .add-btn { background:#fff1e6; box-shadow:none; border-radius:14px; }
+.active { color:var(--accent); }
+.shop-list { background:var(--paper); }
+.shop-box { margin:10px; border:1px solid var(--line); border-radius:16px; padding:14px; }
+.shop-img img { border-radius:12px; }
+.sort-bar { border-bottom:1px solid var(--line); }
+.el-input__inner,.el-textarea__inner { border-radius:12px; border-color:#e5e1d7; }
+.el-button { border-radius:12px; }
+.el-button--primary { background:var(--accent); border-color:var(--accent); }
+.el-tabs__active-bar { background:var(--accent); }
+.login-container .content { background:var(--paper); box-sizing:border-box; padding:26px; }
+.login-container .login-form::before { content:'欢迎来到Wit Living'; display:block; font-size:25px; font-weight:700; margin:22px 0 28px; color:#294b3f; }
+.basic { background:linear-gradient(120deg,#f9eddd,#eaf0df); border-radius:0 0 22px 22px; }
+:focus-visible { outline:2px solid #ee704b; outline-offset:3px; }
+@media(min-width:700px) { body::before { content:'ZHIQU LIFE / Wit Living'; position:fixed; bottom:24px; left:26px; color:#777d70; font-size:11px; letter-spacing:2px; } }
