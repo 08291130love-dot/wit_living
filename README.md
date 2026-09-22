@@ -6,7 +6,7 @@
 
 **城市生活发现 · 探店社区 · 优惠券秒杀**
 
-Java 8 · Spring Boot · MySQL · Redis · Caffeine · RocketMQ · Redisson
+Java · Spring Boot · MySQL · Redis · Caffeine · RocketMQ · Redisson
 
 </div>
 
@@ -110,11 +110,3 @@ mvn spring-boot:run
 后端默认端口为 `8081`；前端通过 Nginx 的 `8080` 端口访问，`/api/` 转发到后端。
 
 完整的建库、环境变量、IDEA 配置及验证范围见 [运行与开发说明](docs/DEVELOPMENT.md)。
-
-## 后续迭代
-
-围绕异步订单的可观测性与一致性，继续完善订单状态查询、对账补偿与死信处理；围绕多实例部署，完善本地缓存失效通知，并补充可复现的集成测试与压测场景。
-
----
-
-[第三方来源与归属](THIRD_PARTY_NOTICES.md) · [展示素材说明](frontend/imgs/generated/ASSETS.md)
