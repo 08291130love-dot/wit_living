@@ -12,4 +12,3 @@ src/main/resources/application-local.yml
 .DS_Store
 Thumbs.db
 maven-settings.xml
-# 配套示例图片保留；真实用户上传内容应放到仓库外并通过 Nginx 映射。
