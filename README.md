@@ -68,13 +68,12 @@ Redisson 用户锁：同一用户的消费处理互斥
 | 点赞互动 | Sorted Set 记录点赞用户及时间，支持点赞状态与用户列表查询 |
 | 关注关系 | 数据库存储关系，Redis Set 支持共同关注查询 |
 | 附近商户 | Redis GEO 查询范围内商户，回查详情并附带距离 |
-| 关注流 | Sorted Set 保存推送内容，按时间游标滚动查询 |
 
 ## 系统架构
 
 ```mermaid
 flowchart TD
-    UI[Vue 2 / Element UI] --> N[Nginx]
+    UI[Vue / Element UI] --> N[Nginx]
     N --> API[Spring Boot API]
     API --> B[业务服务]
     B --> C[Caffeine 本地缓存]
