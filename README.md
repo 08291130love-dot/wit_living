@@ -1,83 +1,120 @@
-# Wit Living
+<div align="center">
 
-城市生活发现与优惠券秒杀项目。围绕商户浏览、探店分享和优惠券下单，实践多级缓存、Redis 原子校验和消息队列异步处理。
+# Wit Living · 智趣生活
 
-![城市生活场景](frontend/imgs/generated/courtyard.jpg)
+发现附近好店，分享生活日常，让心仪的优惠更近一步。
 
-## 项目亮点
+**城市生活发现 · 探店社区 · 优惠券秒杀**
 
-- **商户缓存**：Caffeine 本地缓存配合 Redis，结合布隆过滤器与逻辑过期控制无效访问、热点重建；RocketMQ 用于缓存失效补偿。
-- **优惠券秒杀**：Redis Lua 原子校验库存及购买资格，RocketMQ 异步落单，Redisson 用户锁及数据库事务处理重复请求与库存竞争。
-- **社交与发现**：签到、点赞、关注、附近商户与关注流，对应 Bitmap、Set、Sorted Set、GEO 等 Redis 数据结构。
-- **独立视觉风格**：暖白、森林绿、珊瑚色的移动端界面，配套生成式场景图片；业务接口保持原有结构。
+Java 8 · Spring Boot · MySQL · Redis · Caffeine · RocketMQ · Redisson
 
-## 技术栈
+</div>
 
-Java 8 / Spring Boot 2.3 / MyBatis-Plus / MySQL / Redis / Caffeine / Guava / Redisson / RocketMQ / Vue 2 / Element UI / Nginx。
+## 项目简介
 
-## 目录
+Wit Living 是一个围绕本地生活场景构建的前后端分离项目，串联商户发现、探店内容、用户互动与优惠券抢购。后端重点围绕两个问题展开：**如何承接热点商户的高频访问，以及如何在并发抢购中协调库存与订单。**
+
+前端采用暖白与森林绿的移动端视觉风格，覆盖商户浏览、探店详情、个人主页和优惠券等页面。
+
+## 核心设计
+
+### 01 · 热点商户的多级缓存
+
+热门商户详情读多写少，重复查询会给数据库带来压力。项目将读取链路组织为：
 
 ```text
-Wit_Living/
-├── frontend/                     # 静态前端、样式及展示素材
-├── src/main/java/com/witliving/
-│   ├── controller/               # HTTP 接口
-│   ├── service/                  # 业务、消息生产与消费、订单事务
-│   ├── mapper/                   # 数据库访问
-│   ├── entity/                   # 数据库实体
-│   ├── dto/                      # 请求与响应对象
-│   ├── config/                   # 缓存、锁、消息、拦截器配置
-│   └── utils/                    # 缓存封装、ID、登录上下文等
-├── src/main/resources/
-│   ├── db/wit_living.sql          # 教学示例数据
-│   ├── mapper/                   # SQL 映射
-│   └── *.lua                     # 秒杀校验、回滚与锁释放
-├── src/test/                     # 需连接中间件的测试
-└── deploy/nginx/wit-living.conf   # 前端与 API 反向代理
+商户 ID → 布隆过滤器 → Caffeine 本地缓存 → Redis 缓存 → MySQL
 ```
 
-## 本地运行
+- **布隆过滤器**：提前拦截确定不存在的商户 ID，减少无效查询。
+- **Caffeine + Redis**：本地缓存承接实例内热点，共享缓存减少数据库访问。
+- **逻辑过期**：缓存过期时由获取重建锁的请求触发异步更新，其余请求可先读取旧值，减少热点失效时的集中回源。
+- **更新失效**：商户更新后清理本机缓存与 Redis，再通过 RocketMQ 触发二次删除补偿。
 
-1. 准备 JDK 8、Maven、MySQL、Redis 和 RocketMQ（NameServer 与 Broker）。本项目没有内置这些服务。
-2. 创建使用 utf8mb4 的 `wit_living` 数据库，再导入 `src/main/resources/db/wit_living.sql`。**脚本包含 DROP TABLE，仅在独立演示数据库执行。**
-3. 在项目根目录启动后端。PowerShell 示例：
+这套设计侧重商户展示场景的读取可用性，允许短暂旧数据；库存判断则采用独立的原子校验链路。
 
-```powershell
-$env:DB_PASSWORD = '替换为本机数据库密码'
-$env:REDIS_HOST = '127.0.0.1'
-# 有认证时再设置：$env:REDIS_PASSWORD = '替换为本机Redis密码'
-$env:ROCKETMQ_NAME_SERVER = '127.0.0.1:9876'
+### 02 · 优惠券秒杀的异步下单
+
+将快速资格判断与数据库落单分开，缩短请求线程中的数据库处理链路。
+
+```text
+下单请求
+   ↓
+Redis Lua：库存校验 + 一人一单校验 + 预扣库存
+   ↓
+RocketMQ：传递订单消息
+   ↓
+Redisson 用户锁：同一用户的消费处理互斥
+   ↓
+独立事务服务：查重 → 条件扣库存 → 写入订单
+```
+
+- **原子资格校验**：库存与购买标记在同一 Lua 脚本中处理，避免多条命令之间的并发竞争。
+- **异步解耦**：生产者负责提交订单消息，消费者负责数据库落单。
+- **重复消费处理**：按用户和优惠券查重，已存在的订单直接返回，避免重复执行下单逻辑。
+- **事务边界**：落单逻辑放在独立 Spring Bean 中，库存更新与订单插入处于同一事务。
+- **数据库库存保护**：通过 `UPDATE ... WHERE stock > 0` 避免库存被扣成负数。
+
+接口返回订单号表示请求已进入处理链路，实际落单由消费者完成。
+
+### 03 · Redis 支撑的社区互动
+
+围绕具体业务选择数据结构，而不是将所有状态都交给数据库轮询。
+
+| 业务场景 | 实现方式 |
+| --- | --- |
+| 用户登录 | Redis 保存登录状态，拦截器刷新有效期，ThreadLocal 传递请求内用户信息 |
+| 每日签到 | Bitmap 按日期记录签到，结合位运算统计连续签到 |
+| 点赞互动 | Sorted Set 记录点赞用户及时间，支持点赞状态与用户列表查询 |
+| 关注关系 | 数据库存储关系，Redis Set 支持共同关注查询 |
+| 附近商户 | Redis GEO 查询范围内商户，回查详情并附带距离 |
+| 关注流 | Sorted Set 保存推送内容，按时间游标滚动查询 |
+
+## 系统架构
+
+```mermaid
+flowchart TD
+    UI[Vue 2 / Element UI] --> N[Nginx]
+    N --> API[Spring Boot API]
+    API --> B[业务服务]
+    B --> C[Caffeine 本地缓存]
+    B --> R[Redis / Lua / Redisson]
+    B --> DB[(MySQL)]
+    B --> MQ[RocketMQ]
+    MQ --> O[订单消费者]
+    O --> TX[独立事务服务]
+    TX --> DB
+    MQ --> E[缓存失效消费者]
+    E --> R
+```
+
+## 代码导航
+
+| 模块 | 入口 |
+| --- | --- |
+| 商户缓存 | [ShopServiceImpl](src/main/java/com/witliving/service/impl/ShopServiceImpl.java) · [CacheClient](src/main/java/com/witliving/utils/CacheClient.java) |
+| 秒杀资格与投递 | [VoucherOrderServiceImpl](src/main/java/com/witliving/service/impl/VoucherOrderServiceImpl.java) · [seckill.lua](src/main/resources/seckill.lua) |
+| 消费与事务 | [SeckillOrderConsumer](src/main/java/com/witliving/service/SeckillOrderConsumer.java) · [VoucherOrderTransactionService](src/main/java/com/witliving/service/VoucherOrderTransactionService.java) |
+| 社区互动 | [BlogServiceImpl](src/main/java/com/witliving/service/impl/BlogServiceImpl.java) · [FollowServiceImpl](src/main/java/com/witliving/service/impl/FollowServiceImpl.java) |
+| 登录与签到 | [UserServiceImpl](src/main/java/com/witliving/service/impl/UserServiceImpl.java) |
+| 前端页面 | [frontend](frontend) |
+
+## 快速开始
+
+准备 **JDK 8、Maven、MySQL、支持 GEOSEARCH 的 Redis、RocketMQ 与 Nginx**，配置数据库和中间件连接后运行：
+
+```shell
 mvn spring-boot:run
 ```
 
-后端默认端口 `8081`。也可配置 `DB_URL`、`DB_USERNAME`、`REDIS_PORT`、`REDIS_DATABASE`。Redisson 与 Spring Redis 复用同一份连接配置。Spring 不会自动读取 .env 文件，请使用环境变量或不提交的 application-local.yaml 配合 local profile。
+后端默认端口为 `8081`；前端通过 Nginx 的 `8080` 端口访问，`/api/` 转发到后端。
 
-4. 将 `deploy/nginx/wit-living.conf` 引入 Nginx 的 `http {}`，检查 `root` 路径并重新加载，访问 `http://localhost:8080`。不要直接双击 HTML，前端依赖 `/api/` 反向代理。
-5. 上传图片默认写到项目根目录的 `frontend/imgs/`；改变工作目录或部署路径时设置 `IMAGE_UPLOAD_DIR` 为对应目录，并让 Nginx 能读取它。
+完整的建库、环境变量、IDEA 配置及验证范围见 [运行与开发说明](docs/DEVELOPMENT.md)。
 
-新副本的数据库默认名称和 RocketMQ Topic/消费组已独立命名为 `wit_living` 系列。不要与旧项目混用消息生产者、消费者。Redis Key 结构保留，运行两个副本时应使用独立 Redis 实例或数据库，避免测试数据相互影响。
+## 后续迭代
 
-## 构建与验证
+围绕异步订单的可观测性与一致性，继续完善订单状态查询、对账补偿与死信处理；围绕多实例部署，完善本地缓存失效通知，并补充可复现的集成测试与压测场景。
 
-```shell
-mvn -DskipTests package
-```
+---
 
-构建产物：`target/wit-living-0.0.1-SNAPSHOT.jar`。现有测试会连接中间件、部分会写入测试数据；仅在专用测试环境执行 `mvn test`。构建成功不代表完整业务联调通过。
-
-## 当前边界
-
-- 验证码为开发演示方案，不是生产短信服务；尚无完整支付、退款与超时关单链路。
-- 秒杀返回订单号表示进入处理流程，不等于数据库订单已经落地。
-- 消费幂等、失败重试不等于消息永不丢失；死信人工处理、可靠对账和更完整补偿仍需建设。
-- 本地缓存跨实例失效与缓存最终一致性仍存在完善空间。
-- 没有可复现压测报告，不宣称未经验证的 QPS 或生产级可用性。
-- 数据及图片为演示用途；正式发布前应替换真实商户样例及检查数据授权。技术栈含较旧版本，生产部署需单独评估升级和安全加固。
-
-## 发布说明
-
-仓库不含原仓库 Git 历史、构建产物及本机 Maven 配置。示例用户手机号已替换为非真实占位号码。提交前检查数据库样例、个人信息、配置和授权，不提交真实密码、用户上传文件或日志。
-
-当前已通过 Java 8 编译检查，尚未完成 MySQL、Redis、RocketMQ 的完整启动及业务联调；不代表开箱即用或生产可用。
-
-代码来源与依赖归属见 [第三方说明](THIRD_PARTY_NOTICES.md)，生成图片说明见 [素材说明](frontend/imgs/generated/ASSETS.md)。
+[第三方来源与归属](THIRD_PARTY_NOTICES.md) · [展示素材说明](frontend/imgs/generated/ASSETS.md)
