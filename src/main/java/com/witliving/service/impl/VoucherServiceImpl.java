@@ -22,7 +22,6 @@ import static com.witliving.utils.RedisConstants.SECKILL_STOCK_KEY;
  * </p>
  *
  *
- * @since 2021-12-22
  */
 @Service
 public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> implements IVoucherService {

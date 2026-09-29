@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * </p>
  *
  *
- * @since 2022-01-04
  */
 public interface SeckillVoucherMapper extends BaseMapper<SeckillVoucher> {
 

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
  * </p>
  *
  *
- * @since 2021-12-22
  */
 @RestController
 @RequestMapping("/blog-comments")

@@ -36,7 +36,6 @@ import static com.witliving.utils.SystemConstants.USER_NICK_NAME_PREFIX;
  * </p>
  *
  *
- * @since 2021-12-22
  */
 @Slf4j
 @Service

@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
  * </p>
  *
  *
- * @since 2022-01-04
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

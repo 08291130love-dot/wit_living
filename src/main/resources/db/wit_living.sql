@@ -11,7 +11,6 @@
  Target Server Version : 50622
  File Encoding         : 65001
 
- Date: 02/03/2022 23:12:54
 */
 
 SET NAMES utf8mb4;
