@@ -1,6 +1,6 @@
 <div align="center">
 
-# Wit Living · 智趣生活
+# Wit Living · 趣智生活
 
 发现附近好店，分享生活日常，让心仪的优惠更近一步。
 
